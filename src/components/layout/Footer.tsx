@@ -59,7 +59,7 @@ const Footer = () => {
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
                 <span className="text-muted-foreground font-body">
                   Cotonou, Bénin<br />
-                  En face de NFFTD
+                  En face du complexe scolaire privée HONKLOHON Zogbadjè-Agori
                 </span>
               </li>
               <li className="flex items-center gap-3">
