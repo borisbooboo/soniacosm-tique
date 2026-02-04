@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Clock, MessageCircle, Send, CheckCircle, Mail, Sparkles, Heart, Star } from "lucide-react";
+import { MapPin, Phone, Clock, MessageCircle, Send, CheckCircle, Mail, Sparkles, Heart, Star, Navigation, ExternalLink, Maximize2, Minimize2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,8 +39,19 @@ const reasons = [
   { icon: Star, title: "Réponse Rapide", description: "Nous répondons sous 24h max" },
 ];
 
+// Coordonnées de la boutique
+const BOUTIQUE_COORDINATES = {
+  lat: 6.3654, // Latitude approximative de Cotonou
+  lng: 2.4183, // Longitude approximative de Cotonou
+  address: "En face du complexe scolaire privée HONKLOHON Zogbadjè-Agori, Cotonou, Bénin"
+};
+
+const MAP_EMBED_URL = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3965.907428155398!2d2.4183!3d6.3654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1023556d5e6e1c7b%3A0x7c07f05c8e8e8e8e!2sComplexe%20Scolaire%20Priv%C3%A9%20HONKLOHON!5e0!3m2!1sfr!2sbj!4v169876543210!5m2!1sfr!2sbj`;
+
 const Contact = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
+  const [mapZoom, setMapZoom] = useState(15);
   
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -74,6 +85,35 @@ ${data.message}`;
       form.reset();
       setIsSubmitted(false);
     }, 3000);
+  };
+
+  const openGoogleMaps = () => {
+    window.open(
+      `https://www.google.com/maps?q=${BOUTIQUE_COORDINATES.lat},${BOUTIQUE_COORDINATES.lng}&z=${mapZoom}`,
+      "_blank"
+    );
+  };
+
+  const openWaze = () => {
+    window.open(
+      `https://www.waze.com/ul?ll=${BOUTIQUE_COORDINATES.lat},${BOUTIQUE_COORDINATES.lng}&navigate=yes`,
+      "_blank"
+    );
+  };
+
+  const getDirections = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        window.open(
+          `https://www.google.com/maps/dir/${userLat},${userLng}/${BOUTIQUE_COORDINATES.lat},${BOUTIQUE_COORDINATES.lng}/`,
+          "_blank"
+        );
+      });
+    } else {
+      openGoogleMaps();
+    }
   };
 
   return (
@@ -166,6 +206,152 @@ ${data.message}`;
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section */}
+      <section className="py-12 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-6xl mx-auto"
+          >
+            <div className="text-center mb-8">
+              <h2 className="font-display text-3xl text-foreground mb-3">
+                Notre <span className="text-gold-gradient">Emplacement</span>
+              </h2>
+              <p className="font-body text-muted-foreground">
+                Retrouvez-nous facilement à Cotonou
+              </p>
+            </div>
+
+            <div className={`${isMapFullscreen ? 'fixed inset-0 z-50 p-4 bg-background' : 'relative rounded-xl overflow-hidden border border-primary/20 shadow-lg'}`}>
+              {/* Map Controls */}
+              <div className="absolute top-4 right-4 z-10 flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMapZoom(prev => Math.min(prev + 1, 20))}
+                  className="bg-card/80 backdrop-blur-sm"
+                >
+                  <span className="text-lg">+</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMapZoom(prev => Math.max(prev - 1, 10))}
+                  className="bg-card/80 backdrop-blur-sm"
+                >
+                  <span className="text-lg">-</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsMapFullscreen(!isMapFullscreen)}
+                  className="bg-card/80 backdrop-blur-sm"
+                >
+                  {isMapFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </Button>
+              </div>
+
+              {/* Google Maps Embed */}
+              <div className="relative aspect-video w-full">
+                <iframe
+                  src={`${MAP_EMBED_URL}&z=${mapZoom}`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localisation SONIA COSMÉTIQUE"
+                  className="absolute inset-0"
+                />
+                
+                {/* Custom Map Overlay */}
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background/20 via-transparent to-transparent" />
+                
+                {/* Location Marker */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                  <div className="relative">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center animate-pulse">
+                      <MapPin className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div className="absolute -top-2 -left-2 w-12 h-12 border-2 border-primary/30 rounded-full animate-ping" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Map Actions Bar */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                <div className="flex gap-2 bg-card/80 backdrop-blur-sm rounded-full p-1 border border-primary/20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={getDirections}
+                    className="rounded-full gap-2"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    Itinéraire
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={openGoogleMaps}
+                    className="rounded-full gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Google Maps
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={openWaze}
+                    className="rounded-full gap-2"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
+                    </svg>
+                    Waze
+                  </Button>
+                </div>
+              </div>
+
+              {/* Address Info Overlay */}
+              <div className="absolute top-4 left-4 z-10 max-w-xs">
+                <div className="bg-card/90 backdrop-blur-sm rounded-lg p-4 border border-primary/20 shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-foreground text-sm font-semibold mb-1">
+                        SONIA COSMÉTIQUE
+                      </h3>
+                      <p className="font-body text-xs text-muted-foreground leading-tight">
+                        {BOUTIQUE_COORDINATES.address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Zoom Indicator */}
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <span className="font-body text-sm text-muted-foreground">
+                Zoom: {mapZoom}x
+              </span>
+              <div className="w-32 bg-primary/10 rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-full transition-all duration-300"
+                  style={{ width: `${((mapZoom - 10) / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -330,8 +516,7 @@ ${data.message}`;
                         Adresse
                       </h3>
                       <p className="font-body text-muted-foreground">
-                        Cotonou, Bénin<br />
-                        En face de NFFTD
+                        {BOUTIQUE_COORDINATES.address}
                       </p>
                     </div>
                   </div>
@@ -448,32 +633,6 @@ ${data.message}`;
               </motion.div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Map/Location Section */}
-      <section className="py-16 bg-card">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto"
-          >
-            <h2 className="font-display text-3xl text-foreground mb-4">
-              Venez Nous <span className="text-gold-gradient">Rencontrer</span>
-            </h2>
-            <p className="font-body text-muted-foreground mb-8">
-              Notre boutique vous accueille du lundi au samedi. Venez découvrir 
-              notre sélection de produits et bénéficiez de conseils personnalisés.
-            </p>
-            <div className="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full border border-primary/20">
-              <MapPin className="w-5 h-5 text-primary" />
-              <span className="font-body text-foreground">
-                Cotonou, Bénin - En face de NFFTD
-              </span>
-            </div>
-          </motion.div>
         </div>
       </section>
     </Layout>
